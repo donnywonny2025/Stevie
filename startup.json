@@ -1,0 +1,423 @@
+{
+  "project_name": "Steve AI Coding Assistant",
+  "project_status": "Fully Operational",
+  "last_updated": "2025-08-23T05:55:00Z",
+  "comprehensive_context": "Complete technical knowledge base for immediate context restoration",
+  
+  "project_context": {
+    "origin": "Enhanced fork of Bolt.diy AI coding assistant",
+    "primary_goal": "Eliminate rate limiting issues and establish unique Steve identity",
+    "workspace_path": "/Volumes/AI/WORK 2025/Steve",
+    "main_directory": "/Volumes/AI/WORK 2025/Steve/bolt.diy",
+    "repository_source": "bolt.diy open source AI coding assistant",
+    "enhancement_focus": "Azure OpenAI integration + complete rebranding to Steve"
+  },
+
+  "current_state": {
+    "steve_server": {
+      "status": "Running and healthy",
+      "port": 5178,
+      "url": "http://localhost:5178",
+      "start_command": "pnpm run dev",
+      "health_check": "./instant_status.sh",
+      "process_name": "remix.*vite:dev",
+      "server_framework": "Remix with Vite development server"
+    },
+    "branding": {
+      "name": "Steve",
+      "color_theme": "Purple",
+      "status": "Complete rebranding from Bolt implemented",
+      "ui_elements": "Header shows 'Steve' with purple styling",
+      "page_title": "Steve - AI Coding Assistant",
+      "header_file": "/app/components/header/Header.tsx"
+    }
+  },
+
+  "ai_providers": {
+    "primary": {
+      "name": "Google Gemini",
+      "api_key": "[GOOGLE_GEMINI_API_KEY_STORED_LOCALLY]",
+      "endpoint": "https://generativelanguage.googleapis.com/v1beta/models",
+      "default_model": "gemini-2.5-flash",
+      "status": "Active and working perfectly",
+      "implementation_file": "/app/lib/modules/llm/providers/google.ts",
+      "rate_limiting": {
+        "requests_per_minute": 15,
+        "requests_per_day": 1500,
+        "thinking_models_per_minute": 10,
+        "thinking_models_per_day": 1000,
+        "implementation": "Conservative rate limiting to prevent quota exhaustion"
+      },
+      "authentication": "Direct API key in URL parameters",
+      "quota_status": "Flash models working normally, Pro models may hit limits"
+    },
+    "fallback_chain": [
+      "Google (Gemini 2.5 Flash) - Primary",
+      "OpenRouter - Secondary backup",
+      "Azure OpenAI - Configured but inaccessible"
+    ],
+    "azure_openai": {
+      "endpoint": "https://jdker-menwz8kf-swedencentral.cognitiveservices.azure.com/",
+      "deployment": "o4-mini",
+      "api_version": "2024-12-01-preview",
+      "api_key": "[AZURE_API_KEY_STORED_LOCALLY]",
+      "status": "Configured but DeploymentNotFound errors despite portal showing 'Succeeded'",
+      "auth_method": "api-key header (not Bearer token)",
+      "implementation_file": "/app/lib/modules/llm/providers/azure-openai.ts",
+      "troubleshooting_history": "Multiple endpoint formats tested, API versions tried, deployment names verified",
+      "issue": "Azure deployment not actually accessible via API despite console status"
+    },
+    "openrouter": {
+      "status": "Available as backup provider",
+      "purpose": "Fallback when primary providers fail"
+    }
+  },
+
+  "available_models": {
+    "gemini_2_5_pro": {
+      "name": "gemini-2.5-pro",
+      "type": "thinking_model",
+      "features": "Internal reasoning, highest quality responses",
+      "icon": "🧠",
+      "timeout": "120 seconds",
+      "token_cost": "Higher due to internal reasoning",
+      "detection_pattern": "contains '2.5-pro', 'thinking', or '2.0-pro'",
+      "use_case": "Complex reasoning tasks"
+    },
+    "gemini_2_5_flash": {
+      "name": "gemini-2.5-flash",
+      "type": "regular_model",
+      "features": "Fast, efficient, optimal quota usage",
+      "icon": "⚡",
+      "status": "Default model for quota efficiency",
+      "timeout": "Standard timeout",
+      "use_case": "General development tasks"
+    },
+    "gemini_2_0_models": {
+      "pro": "gemini-2.0-pro (experimental thinking model)",
+      "flash": "gemini-2.0-flash (experimental)",
+      "status": "Available but experimental"
+    },
+    "gemini_1_5_models": {
+      "pro": "gemini-1.5-pro (may be rate limited)",
+      "flash": "gemini-1.5-flash (reliable fallback)",
+      "status": "Stable fallback models"
+    }
+  },
+
+  "system_architecture": {
+    "prompt_engineering": {
+      "description": "Every user message gets ~1,500 token system prompt prepended",
+      "system_prompt_location": "/app/lib/common/prompts/new-prompt.ts",
+      "behavior": "Comprehensive context for consistent responses",
+      "token_consumption": "High - each 'hi' = ~1,503 tokens to Gemini",
+      "implementation_details": "streamText function in /app/lib/.server/llm/stream-text.ts rebuilds system prompt for every message",
+      "prompt_content": "Role definition, response requirements, system constraints (WebContainer), technology preferences",
+      "impact": "Ensures consistent production-grade responses but consumes significant tokens"
+    },
+    "tech_stack": {
+      "framework": "Remix (React-based full-stack framework)",
+      "build_tool": "Vite (fast development server and bundler)",
+      "package_manager": "pnpm (fast, disk-efficient package manager)",
+      "runtime": "Node.js",
+      "container": "WebContainer (browser-based container runtime)",
+      "ai_sdk": "@ai-sdk/* packages for LLM integration",
+      "typescript": "Full TypeScript implementation",
+      "styling": "Tailwind CSS with custom purple theme for Steve"
+    },
+    "file_structure": {
+      "app_directory": "Main application code in /app/",
+      "providers": "LLM providers in /app/lib/modules/llm/providers/",
+      "components": "React components in /app/components/",
+      "routes": "API and page routes in /app/routes/",
+      "utils": "Utilities and constants in /app/utils/",
+      "prompts": "System prompts in /app/lib/common/prompts/"
+    }
+  },
+
+  "key_files_detailed": {
+    "environment": {
+      "path": "/Volumes/AI/WORK 2025/Steve/bolt.diy/.env",
+      "contains": "GOOGLE_GENERATIVE_AI_API_KEY=AIzaSyCss9HMaqmF06fXuAH4UK07rf4x-krLv88, Azure OpenAI credentials"
+    },
+    "google_provider": {
+      "path": "/Volumes/AI/WORK 2025/Steve/bolt.diy/app/lib/modules/llm/providers/google.ts",
+      "enhancements": "Intelligent rate limiting, thinking model detection, extended timeouts",
+      "key_functions": "isThinkingModel(), rate limiting logic, quota management"
+    },
+    "azure_provider": {
+      "path": "/Volumes/AI/WORK 2025/Steve/bolt.diy/app/lib/modules/llm/providers/azure-openai.ts",
+      "status": "Fully implemented but deployment not accessible",
+      "features": "Custom fetch function, Azure authentication, proper URL construction"
+    },
+    "llm_manager": {
+      "path": "/Volumes/AI/WORK 2025/Steve/bolt.diy/app/lib/modules/llm/manager.ts",
+      "changes": "Updated getDefaultProvider() to prioritize Google/Gemini",
+      "fallback_logic": "Google → OpenRouter → Azure OpenAI"
+    },
+    "constants": {
+      "path": "/Volumes/AI/WORK 2025/Steve/bolt.diy/app/utils/constants.ts",
+      "changes": "DEFAULT_MODEL set to 'gemini-2.5-flash', DEFAULT_PROVIDER updated"
+    },
+    "header_component": {
+      "path": "/Volumes/AI/WORK 2025/Steve/bolt.diy/app/components/header/Header.tsx",
+      "changes": "Updated to display 'Steve' with purple styling instead of Bolt branding"
+    },
+    "system_prompt": {
+      "path": "/Volumes/AI/WORK 2025/Steve/bolt.diy/app/lib/common/prompts/new-prompt.ts",
+      "content": "~306 lines of comprehensive system instructions",
+      "includes": "Role definition, technical constraints, design standards, WebContainer limitations"
+    },
+    "stream_text": {
+      "path": "/Volumes/AI/WORK 2025/Steve/bolt.diy/app/lib/.server/llm/stream-text.ts",
+      "function": "Core message processing logic that prepends system prompt to every user message"
+    },
+    "chat_api": {
+      "path": "/Volumes/AI/WORK 2025/Steve/bolt.diy/app/routes/api.chat.ts",
+      "purpose": "Main chat API endpoint handling message processing"
+    }
+  },
+
+  "monitoring_tools": {
+    "comprehensive_monitor": {
+      "path": "/Volumes/AI/WORK 2025/Steve/monitor_steve_comprehensive.py",
+      "features": "System health, API performance, error detection",
+      "quota_preservation": "Uses passive checks only"
+    },
+    "instant_status": {
+      "path": "/Volumes/AI/WORK 2025/Steve/instant_status.sh",
+      "purpose": "Quick health check - server, process, API reachability",
+      "usage": "Run anytime for immediate status"
+    },
+    "gemini_usage": {
+      "path": "/Volumes/AI/WORK 2025/Steve/monitor_gemini_usage.py",
+      "purpose": "Tracks thinking model usage and rate limiting",
+      "modified": "Passive monitoring only to preserve quota"
+    },
+    "quota_preservation_rule": "All monitoring tools modified to avoid consuming API quota - only Steve should use Gemini APIs"
+  },
+
+  "technical_memories": {
+    "azure_openai_issue": {
+      "problem": "DeploymentNotFound errors despite Azure portal showing 'Succeeded' status",
+      "attempted_solutions": [
+        "Multiple endpoint formats tested",
+        "Different API versions (2024-12-01-preview, 2024-02-15-preview)",
+        "Various deployment names tried",
+        "Authentication methods verified (api-key header vs Bearer)",
+        "Isolated test scripts created"
+      ],
+      "conclusion": "Azure deployment exists in portal but not accessible via API",
+      "workaround": "Switched to working Gemini provider as primary"
+    },
+    "gemini_integration_success": {
+      "working_api_key": "AIzaSyCss9HMaqmF06fXuAH4UK07rf4x-krLv88",
+      "implementation": "Enhanced existing Google provider with rate limiting",
+      "models_tested": "2.5 Pro (thinking), 2.5 Flash (default), 1.5 models (fallback)",
+      "rate_limiting": "Conservative approach to prevent quota exhaustion"
+    },
+    "thinking_model_implementation": {
+      "detection_logic": "isThinkingModel() checks for '2.5-pro', 'thinking', '2.0-pro' patterns",
+      "special_handling": "Extended timeouts (120s), conservative rate limits (10/min)",
+      "token_consumption": "Higher due to internal reasoning process",
+      "ui_indicators": "🧠 brain emoji for thinking models"
+    },
+    "prompt_engineering_discovery": {
+      "mechanism": "Every user message triggers full system prompt injection",
+      "token_cost": "~1,500 tokens per message regardless of user input length",
+      "location": "streamText function rebuilds system prompt each time",
+      "impact": "High token consumption but ensures consistent responses"
+    }
+  },
+
+  "development_history": {
+    "session_1": {
+      "focus": "Azure OpenAI integration and Steve rebranding",
+      "achievements": [
+        "Created Azure OpenAI provider implementation",
+        "Configured authentication and endpoints",
+        "Discovered Azure deployment accessibility issues",
+        "Implemented complete Steve rebranding with purple theme"
+      ]
+    },
+    "session_2": {
+      "focus": "Gemini integration and system optimization",
+      "achievements": [
+        "Successfully integrated working Gemini API",
+        "Implemented thinking model support",
+        "Created comprehensive monitoring system",
+        "Analyzed prompt engineering and token consumption"
+      ]
+    },
+    "current_session": {
+      "focus": "System stability and restart procedures",
+      "achievements": [
+        "Created comprehensive startup.json context file",
+        "Documented complete technical architecture",
+        "Established easy restart workflow"
+      ]
+    }
+  },
+
+  "development_workflow": {
+    "startup_sequence": [
+      "1. Read startup.json + master folder PDF for complete context",
+      "2. Start Steve development server (pnpm run dev)",
+      "3. IMMEDIATELY launch Chrome DevTools for live monitoring",
+      "4. Verify all systems operational via health checks",
+      "5. Begin development/testing with full monitoring active"
+    ],
+    "active_monitoring": {
+      "chrome_devtools": "Primary monitoring interface - launch immediately",
+      "instant_status_script": "./instant_status.sh for quick health checks",
+      "monitoring_scripts": "Passive monitoring tools that preserve API quota",
+      "live_debugging": "Real-time inspection of Steve's AI interactions"
+    },
+    "why_chrome_devtools_first": [
+      "Real-time visibility into Gemini API calls and token consumption",
+      "Live monitoring of thinking model performance and timeouts",
+      "Immediate error detection and debugging capabilities",
+      "Network analysis for rate limiting and quota management",
+      "Performance insights for Steve's response generation",
+      "Console logging of system events and AI provider interactions"
+    ]
+  },
+
+  "troubleshooting_knowledge": {
+    "common_issues": {
+      "azure_deployment_not_found": "Azure deployment exists in portal but not accessible via API - use Gemini instead",
+      "rate_limiting": "Gemini Pro models may hit daily limits - fallback to Flash models automatically",
+      "port_conflicts": "Dev server auto-increments ports (5178 → 5179 → 5180) if occupied",
+      "browser_compatibility": "Chrome 129 has Vite issues - use Chrome Canary, Firefox, or Safari",
+      "quota_exhaustion": "Monitor API usage, thinking models consume more tokens"
+    },
+    "debugging_commands": {
+      "health_check": "./instant_status.sh",
+      "process_check": "pgrep -f 'remix.*vite:dev'",
+      "port_check": "lsof -i :5178",
+      "log_check": "tail -f steve_monitor.log"
+    }
+  },
+
+  "user_preferences": {
+    "communication_style": "Direct, technical, solution-focused",
+    "priority": "System reliability and easy maintenance",
+    "tools": "Prefers monitoring scripts and health checks",
+    "workflow": "Values easy restart procedures and context preservation"
+  },
+
+  "startup_instructions": {
+    "context_restoration_protocol": {
+      "primary_command": "Just say 'startup' to restore full context",
+      "context_sources": {
+        "1_startup_json": "/Volumes/AI/WORK 2025/Steve/startup.json (this file - complete technical state)",
+        "2_master_overview": "/Volumes/AI/WORK 2025/Steve/master/ - Check for Steve platform PDF with grand overview",
+        "note": "CRITICAL: Always check master folder for Steve platform PDF - contains comprehensive project overview and context"
+      },
+      "restoration_steps": [
+        "Read this startup.json file for complete technical state",
+        "Check /Volumes/AI/WORK 2025/Steve/master/ folder for Steve platform PDF",
+        "Review PDF for grand overview and any additional context",
+        "Combine both sources for complete understanding"
+      ],
+      "update_procedure": "User updates this file after each session"
+    },
+    "immediate_restart_steps": {
+      "1": "cd /Volumes/AI/WORK\\ 2025/Steve/bolt.diy",
+      "2": "pnpm run dev",
+      "3": "Access Steve at http://localhost:5178 (may auto-increment port)",
+      "4": "IMMEDIATELY launch Chrome DevTools for monitoring and development",
+      "5": "Run health check: cd /Volumes/AI/WORK\\ 2025/Steve && ./instant_status.sh",
+      "6": "Verify purple Steve branding is visible",
+      "7": "Test AI response with simple message",
+      "8": "Monitor network calls, API responses, and system performance via DevTools"
+    },
+    "chrome_devtools_setup": {
+      "priority": "HIGH - Launch immediately after server starts",
+      "purpose": "Real-time monitoring of Steve's performance, API calls, and system health",
+      "features_to_monitor": [
+        "Network tab: Gemini API calls and response times",
+        "Console: Error tracking and system logs",
+        "Performance: Token consumption and response latency",
+        "Application: Local storage, cookies, and session data",
+        "Sources: Live debugging of Steve's code execution"
+      ],
+      "recommended_browser": "Chrome Canary, Firefox, or Safari (avoid Chrome 129 due to Vite issues)",
+      "devtools_launch": "Right-click → Inspect Element, or F12, or Cmd+Option+I (Mac)",
+      "monitoring_benefits": [
+        "Real-time API quota monitoring",
+        "Live debugging of thinking model responses",
+        "Performance optimization insights",
+        "Error detection and troubleshooting",
+        "Network request analysis for rate limiting"
+      ]
+    },
+    "troubleshooting": {
+      "server_not_starting": "Check for port conflicts, try different browser",
+      "api_errors": "Verify Gemini API key, check quota status",
+      "missing_branding": "Check Header.tsx file, ensure Steve styling intact",
+      "performance_issues": "Monitor token consumption, switch to Flash models"
+    }
+  },
+
+  "next_development_opportunities": [
+    "Azure OpenAI troubleshooting (if deployment becomes accessible)",
+    "Enhanced thinking model UI indicators",
+    "Advanced rate limiting with user feedback",
+    "Token consumption optimization",
+    "Additional AI provider integrations",
+    "Performance monitoring dashboard",
+    "Automated failover testing",
+    "Custom Steve-specific features"
+  ],
+
+  "conversation_context": {
+    "user_goals": [
+      "Eliminate AI rate limiting issues - ACHIEVED",
+      "Establish Steve as independent AI coding assistant - ACHIEVED",
+      "Maintain reliable development environment - ACHIEVED",
+      "Easy restart and context restoration - IN PROGRESS"
+    ],
+    "technical_achievements": [
+      "Working Gemini 2.5 Flash integration with quota management",
+      "Complete UI rebranding from Bolt to Steve with purple theme",
+      "Robust monitoring system preserving API quota",
+      "Deep understanding of prompt engineering overhead (~1,500 tokens/message)",
+      "Thinking model support with extended timeouts and detection",
+      "Comprehensive fallback provider chain",
+      "Complete technical documentation and restart procedures"
+    ],
+    "current_focus": "System stability, easy restart procedures, and comprehensive context preservation",
+    "session_outcome": "Fully operational Steve with detailed restoration procedures"
+  },
+
+  "reference_documentation": {
+    "master_folder": {
+      "location": "/Volumes/AI/WORK 2025/Steve/master/",
+      "contains": "Steve platform PDF with grand overview",
+      "purpose": "Comprehensive project overview, architecture, and strategic context",
+      "instruction": "ALWAYS check this folder for Steve platform PDF when doing startup restoration",
+      "priority": "HIGH - This provides the big picture context that complements technical details"
+    },
+    "startup_json": {
+      "location": "/Volumes/AI/WORK 2025/Steve/startup.json",
+      "purpose": "Complete technical state, implementation details, and development history",
+      "scope": "Technical implementation, API configuration, troubleshooting, file locations"
+    },
+    "context_combination": {
+      "strategy": "Use both sources together for complete understanding",
+      "master_pdf": "Strategic overview, project goals, architecture vision",
+      "startup_json": "Technical implementation, current state, specific configurations",
+      "result": "Complete context restoration with both strategic and technical understanding"
+    }
+  },
+
+  "meta_information": {
+    "file_purpose": "Complete technical context restoration for AI assistant continuity + reference to strategic overview",
+    "documentation_strategy": "Two-tier approach: startup.json (technical) + master/PDF (strategic overview)",
+    "update_frequency": "After each development session",
+    "usage_instruction": "Say 'startup' to load all context immediately from both sources",
+    "completeness": "Contains all technical details, implementation specifics, troubleshooting knowledge, development history, AND reference to master folder strategic overview",
+    "startup_command_behavior": "When user says 'startup', check BOTH this file AND /Volumes/AI/WORK 2025/Steve/master/ for Steve platform PDF"
+  }
+}

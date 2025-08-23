@@ -1,0 +1,3 @@
+Experimental test file created during resource interference testing.
+Created at the same time as multiple other operations to test for conflicts.
+Operation timestamp: concurrent with read, write, bash, and web operations.
