@@ -14,11 +14,59 @@ import { extractPropertiesFromMessage } from '~/lib/.server/llm/utils';
 import type { DesignScheme } from '~/types/design-scheme';
 import { MCPService } from '~/lib/services/mcpService';
 
+// 🎨 SCOUT QUALITY INTELLIGENCE SYSTEM - Revolutionary token efficiency + artist mentality
+import { QualityAwareQueryAnalyzer } from '~/lib/intelligence/QualityAwareQueryAnalyzer';
+import { IntelligentContextRetrieval } from '~/lib/intelligence/IntelligentContextRetrieval';
+import { QualityAwareContextManager } from '~/lib/intelligence/QualityAwareContextManager';
+import { TokenManager } from '~/lib/intelligence/TokenManager';
+import { qualityCurator } from '~/lib/quality/QualityCurationManager';
+
 export async function action(args: ActionFunctionArgs) {
   return chatAction(args);
 }
 
 const logger = createScopedLogger('api.chat');
+
+// 🚀 Initialize Scout Quality Intelligence System
+const queryAnalyzer = new QualityAwareQueryAnalyzer();
+const contextRetrieval = new IntelligentContextRetrieval();
+const contextManager = new QualityAwareContextManager();
+const tokenManager = new TokenManager();
+
+// Initialize quality curation system
+qualityCurator.initialize().catch(error => {
+  console.warn('⚠️ Quality curation initialization failed:', error);
+});
+
+// Helper function to get cached responses for fallback strategies
+function getCachedResponse(analysis: any, userQuery: string): string | null {
+  if (!analysis.fallback_strategy) return null;
+  
+  const strategy = analysis.fallback_strategy.strategy;
+  
+  switch (strategy) {
+    case 'pure_greeting':
+      return "Hello! I'm Steve, your intelligent coding assistant. I'm here to help you build amazing things. What would you like to create today? 🚀";
+    
+    case 'gratitude':
+      return "You're very welcome! I'm always happy to help. Feel free to ask me anything else you'd like to work on together! 😊";
+    
+    case 'status_check':
+      return "I'm doing great and ready to help! My Scout Intelligence system is running optimally and I'm here to assist you with any coding tasks. What can we build together?";
+    
+    case 'debug_request':
+      return "I'd be happy to help you debug that error! To provide the best assistance, could you please share the specific error message and the relevant code? The more details you can provide, the better I can help you solve it. 🔧";
+    
+    case 'simple_creation':
+      return "I'd love to help you create that! To get started, could you tell me a bit more about what you have in mind? For example, what technology stack would you prefer, or do you have any specific requirements? 🎨";
+    
+    case 'progressive_discovery':
+      return "That sounds interesting! To give you the most helpful response, could you provide a bit more context about what you're trying to accomplish? I want to make sure I understand your needs correctly. 🤔";
+    
+    default:
+      return null;
+  }
+}
 
 function parseCookies(cookieHeader: string): Record<string, string> {
   const cookies: Record<string, string> = {};
@@ -72,6 +120,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
     totalTokens: 0,
   };
   const encoder: TextEncoder = new TextEncoder();
+  let lastChunk: any = null;
   let progressCounter: number = 1;
 
   try {
@@ -79,10 +128,178 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
     const totalMessageContent = messages.reduce((acc, message) => acc + message.content, '');
     logger.debug(`Total message length: ${totalMessageContent.split(' ').length}, words`);
 
-    let lastChunk: string | undefined = undefined;
-
     const dataStream = createDataStream({
       async execute(dataStream) {
+        // 🧠 SCOUT INTELLIGENCE PROCESSING - Replace token-wasting context with smart analysis
+        const currentUserMessage = messages[messages.length - 1];
+        const sessionId = generateId(); // TODO: Use actual session ID from request
+        
+        logger.info('🚀 Scout Intelligence: Starting query analysis...');
+        
+        // Step 1: Analyze query using Scout's multi-pass approach
+        const analysis = await queryAnalyzer.analyzeQuery(
+          currentUserMessage.content,
+          messages.slice(0, -1) // Previous conversation context
+        );
+        
+        logger.info(`📊 Query classified as: ${analysis.query_type} (confidence: ${analysis.confidence_score.toFixed(2)})`);
+        
+        // Step 2: Check for cached fallback responses (fastest path)
+        if (analysis.fallback_strategy) {
+          logger.info(`🎯 Using cached response: ${analysis.fallback_strategy.strategy} (${analysis.fallback_strategy.estimated_tokens} tokens)`);
+          
+          // Track massive token savings
+          const tokenDisplay = tokenManager.trackSavings(
+            sessionId,
+            analysis.query_type,
+            analysis.fallback_strategy.estimated_tokens
+          );
+          
+          // Notify UI of intelligence processing
+          dataStream.writeMessageAnnotation({
+            type: 'intelligence',
+            data: {
+              steps: [
+                { id: '1', action: 'analyze', status: 'complete' },
+                { id: '2', action: 'fallback', status: 'complete', tokens: analysis.fallback_strategy.estimated_tokens }
+              ],
+              isVisible: true
+            }
+          });
+          
+          // Return cached response directly (bypassing entire context building)
+          const cachedResponse = getCachedResponse(analysis, currentUserMessage.content);
+          if (cachedResponse) {
+            // Write cached response to stream - using writeData for text
+            dataStream.writeData({
+              type: 'text',
+              content: cachedResponse
+            });
+            
+            // Write token usage annotation
+            dataStream.writeMessageAnnotation({
+              type: 'tokenUsage',
+              data: {
+                queryType: analysis.query_type,
+                tokensUsed: analysis.fallback_strategy.estimated_tokens,
+                tokensSaved: tokenDisplay.tokens_saved,
+                efficiencyGain: tokenDisplay.efficiency_gain,
+                source: 'cached_response'
+              }
+            });
+            
+            return;
+          }
+        }
+        
+        // Step 3: Intelligent context retrieval (only if needed)
+        logger.info('🔍 Scout Intelligence: Finding relevant context...');
+        
+        dataStream.writeMessageAnnotation({
+          type: 'intelligence',
+          data: {
+            steps: [
+              { id: '1', action: 'analyze', status: 'complete' },
+              { id: '2', action: 'context', status: 'processing' }
+            ],
+            isVisible: true
+          }
+        });
+        
+        const relevantContext = await contextRetrieval.findRelevantContext(
+          currentUserMessage.content,
+          // Convert AI SDK messages to IntelligentContextRetrieval format
+          messages.slice(0, -1).map(msg => ({
+            content: msg.content,
+            timestamp: new Date(), // Use current time as fallback
+            id: msg.id,
+            role: msg.role as 'user' | 'assistant'
+          })),
+          {} // options
+        );
+        
+        // Step 4: Dynamic context window with smart fallbacks
+        logger.info('🎯 Scout Intelligence: Building optimized context window...');
+        
+        dataStream.writeMessageAnnotation({
+          type: 'intelligence',
+          data: {
+            steps: [
+              { id: '1', action: 'analyze', status: 'complete' },
+              { id: '2', action: 'context', status: 'complete' },
+              { id: '3', action: 'optimize', status: 'processing' }
+            ],
+            isVisible: true
+          }
+        });
+        
+        const contextWindow = await contextManager.buildContextWindow(
+          analysis,
+          relevantContext,
+          currentUserMessage.content,
+          sessionId // Use the session ID
+        );
+        
+        // Track intelligent context usage
+        const contextUsage = tokenManager.analyzeUsage(
+          'system_prompt', // TODO: Pass actual system prompt
+          currentUserMessage.content,
+          {
+            history: contextWindow.components.find(c => c.type === 'relevant_history')?.content,
+            technical: contextWindow.components.find(c => c.type === 'technical_context')?.content,
+            files: contextWindow.components.find(c => c.type === 'file_context')?.content
+          }
+        );
+        
+        // ✨ QUALITY INTELLIGENCE: Track quality guidance usage
+        const qualityWindow = contextWindow as any; // Type assertion for quality fields
+        if (qualityWindow.contains_quality_guidance) {
+          logger.info(`✨ Quality guidance: +${qualityWindow.quality_token_count} tokens`);
+          
+          // Write quality guidance annotation for frontend
+          dataStream.writeMessageAnnotation({
+            type: 'tokenUsage',
+            data: {
+              queryType: analysis.query_type,
+              tokensUsed: contextWindow.token_count,
+              qualityTokens: qualityWindow.quality_token_count,
+              baseTokens: contextWindow.token_count - qualityWindow.quality_token_count,
+              source: 'quality_guidance',
+              hasQualityGuidance: true
+            }
+          });
+        } else {
+          // Track when quality guidance was not needed
+          dataStream.writeMessageAnnotation({
+            type: 'tokenUsage', 
+            data: {
+              queryType: analysis.query_type,
+              tokensUsed: contextWindow.token_count,
+              qualityTokens: 0,
+              baseTokens: contextWindow.token_count,
+              source: 'scout_intelligence_only',
+              hasQualityGuidance: false
+            }
+          });
+        }
+        
+        logger.info(`💡 Scout context: ${contextWindow.token_count} tokens (${contextWindow.current_level} level)`);
+        
+        const useIntelligentContext = contextWindow.token_count > 0 && !contextWindow.fallback_strategy;
+        
+        // Final notification step
+        dataStream.writeMessageAnnotation({
+          type: 'intelligence',
+          data: {
+            steps: [
+              { id: '1', action: 'analyze', status: 'complete' },
+              { id: '2', action: 'context', status: 'complete' },
+              { id: '3', action: 'optimize', status: 'complete', tokens: contextWindow.token_count },
+              { id: '4', action: 'complete', status: 'complete' }
+            ],
+            isVisible: true
+          }
+        });
         const filePaths = getFilePaths(files || {});
         let filteredFiles: FileMap | undefined = undefined;
         let summary: string | undefined = undefined;
@@ -94,7 +311,15 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
           messageSliceId = processedMessages.length - 3;
         }
 
-        if (filePaths.length > 0 && contextOptimization) {
+        // 🧠 SCOUT INTELLIGENCE: Skip old context building if using intelligent context
+        if (useIntelligentContext && !contextWindow.fallback_strategy) {
+          logger.info('🚀 Using Scout intelligent context - skipping old file analysis');
+          
+          // Use our optimized context instead of old system
+          filteredFiles = undefined; // Don't load all files
+          summary = contextWindow.components.find(c => c.type === 'relevant_history')?.content;
+          
+        } else if (filePaths.length > 0 && contextOptimization) {
           logger.debug('Generating Chat Summary');
           dataStream.writeData({
             type: 'progress',
@@ -194,7 +419,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
           } satisfies ProgressAnnotation);
 
           // logger.debug('Code Files Selected');
-        }
+        } // End of old context building
 
         const options: StreamingOptions = {
           supabaseConnection: supabase,
@@ -405,4 +630,56 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
       statusText: 'Error',
     });
   }
+}
+
+/**
+ * 🎯 Helper Functions for Scout Intelligence System
+ */
+
+/**
+ * Create a stream response for cached answers
+ */
+function createCachedResponseStream(response: string, tokenDisplay: any, dataStream: any): Response {
+  const encoder = new TextEncoder();
+  
+  // Create a simple stream that returns the cached response
+  const stream = new ReadableStream({
+    start(controller) {
+      try {
+        // Write the response
+        controller.enqueue(encoder.encode(`0:"${response.replace(/"/g, '\\"')}\n"`));
+        
+        // Write token usage annotation
+        const annotation = JSON.stringify({
+          type: 'tokenUsage',
+          data: {
+            queryType: tokenDisplay.query_type,
+            tokensUsed: tokenDisplay.tokens_used,
+            tokensSaved: tokenDisplay.tokens_saved,
+            efficiencyGain: tokenDisplay.efficiency_gain,
+            source: 'cached_response'
+          }
+        });
+        controller.enqueue(encoder.encode(`2:[{"tokenUsage":${annotation}}]\n`));
+        
+        // Signal completion
+        controller.enqueue(encoder.encode('d:{"finishReason":"stop","usage":{"promptTokens":0,"completionTokens":' + 
+          Math.ceil(response.length / 4) + ',"totalTokens":' + Math.ceil(response.length / 4) + '}}\n'));
+        
+        controller.close();
+      } catch (error) {
+        controller.error(error);
+      }
+    }
+  });
+  
+  return new Response(stream, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      Connection: 'keep-alive',
+      'Cache-Control': 'no-cache',
+      'Text-Encoding': 'chunked',
+    },
+  });
 }

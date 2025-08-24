@@ -141,6 +141,12 @@ export const ChatImpl = memo(
     });
     const [provider, setProvider] = useState(() => {
       const savedProvider = Cookies.get('selectedProvider');
+      // Force Google provider as default, regardless of saved cookie
+      const googleProvider = PROVIDER_LIST.find((p) => p.name === 'Google');
+      if (googleProvider) {
+        return googleProvider as ProviderInfo;
+      }
+      // Fallback to saved provider or DEFAULT_PROVIDER
       return (PROVIDER_LIST.find((p) => p.name === savedProvider) || DEFAULT_PROVIDER) as ProviderInfo;
     });
     const { showChat } = useStore(chatStore);
@@ -231,6 +237,37 @@ export const ChatImpl = memo(
 
     useEffect(() => {
       chatStore.setKey('started', initialMessages.length > 0);
+    }, []);
+
+    // Force correct provider/model defaults and update cookies
+    useEffect(() => {
+      const savedProvider = Cookies.get('selectedProvider');
+      const savedModel = Cookies.get('selectedModel');
+      
+      // Clear any non-Google provider cookies and force Google
+      if (savedProvider && savedProvider !== 'Google') {
+        console.log('Clearing incorrect provider cookie:', savedProvider);
+        Cookies.remove('selectedProvider');
+      }
+      
+      // Always ensure Google provider is set as default
+      if (!savedProvider || savedProvider !== 'Google') {
+        console.log('Setting provider to Google (was:', savedProvider, ')');
+        Cookies.set('selectedProvider', 'Google', { expires: 30 });
+        const googleProvider = PROVIDER_LIST.find((p) => p.name === 'Google');
+        if (googleProvider && provider.name !== 'Google') {
+          setProvider(googleProvider as ProviderInfo);
+        }
+      }
+      
+      // Always ensure gemini-2.5-flash is set as default model
+      if (!savedModel || savedModel !== DEFAULT_MODEL) {
+        console.log('Setting model to', DEFAULT_MODEL, '(was:', savedModel, ')');
+        Cookies.set('selectedModel', DEFAULT_MODEL, { expires: 30 });
+        if (model !== DEFAULT_MODEL) {
+          setModel(DEFAULT_MODEL);
+        }
+      }
     }, []);
 
     useEffect(() => {

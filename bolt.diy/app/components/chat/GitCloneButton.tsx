@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 import { LoadingOverlay } from '~/components/ui/LoadingOverlay';
 import { RepositorySelectionDialog } from '~/components/@settings/tabs/connections/components/RepositorySelectionDialog';
 import { classNames } from '~/utils/classNames';
-import { Button } from '~/components/ui/Button';
+import { GlowButton } from '~/components/ui/GlowButton';
 import type { IChatMetadata } from '~/lib/persistence/db';
 
 const IGNORE_PATTERNS = [
@@ -154,25 +154,17 @@ ${escapeBoltTags(file.content)}
 
   return (
     <>
-      <Button
+      <GlowButton
         onClick={() => setIsDialogOpen(true)}
-        title="Clone a Git Repo"
-        variant="default"
-        size="lg"
-        className={classNames(
-          'gap-2 bg-bolt-elements-background-depth-1',
-          'text-bolt-elements-textPrimary',
-          'hover:bg-bolt-elements-background-depth-2',
-          'border border-bolt-elements-borderColor',
-          'h-10 px-4 py-2 min-w-[120px] justify-center',
-          'transition-all duration-200 ease-in-out',
-          className,
-        )}
         disabled={!ready || loading}
+        variant="accent"
+        size="lg"
+        icon={<span className="i-ph:git-branch w-4 h-4" />}
+        glowColors={['#8b5cf6', '#7c3aed']}
+        className={className}
       >
-        <span className="i-ph:git-branch w-4 h-4" />
         Clone a Git Repo
-      </Button>
+      </GlowButton>
 
       <RepositorySelectionDialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} onSelect={handleClone} />
 

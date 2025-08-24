@@ -3,8 +3,8 @@ import type { Message } from 'ai';
 import { toast } from 'react-toastify';
 import { MAX_FILES, isBinaryFile, shouldIncludeFile } from '~/utils/fileUtils';
 import { createChatFromFolder } from '~/utils/folderImport';
-import { logStore } from '~/lib/stores/logs'; // Assuming logStore is imported from this location
-import { Button } from '~/components/ui/Button';
+import { logStore } from '~/lib/stores/logs';
+import { GlowButton } from '~/components/ui/GlowButton';
 import { classNames } from '~/utils/classNames';
 
 interface ImportFolderButtonProps {
@@ -114,28 +114,20 @@ export const ImportFolderButton: React.FC<ImportFolderButtonProps> = ({ classNam
         onChange={handleFileChange}
         {...({} as any)}
       />
-      <Button
+      <GlowButton
         onClick={() => {
           const input = document.getElementById('folder-import');
           input?.click();
         }}
-        title="Import Folder"
-        variant="default"
-        size="lg"
-        className={classNames(
-          'gap-2 bg-bolt-elements-background-depth-1',
-          'text-bolt-elements-textPrimary',
-          'hover:bg-bolt-elements-background-depth-2',
-          'border border-bolt-elements-borderColor',
-          'h-10 px-4 py-2 min-w-[120px] justify-center',
-          'transition-all duration-200 ease-in-out',
-          className,
-        )}
         disabled={isLoading}
+        variant="secondary"
+        size="lg"
+        icon={<span className="i-ph:upload-simple w-4 h-4" />}
+        glowColors={['#3b82f6', '#1d4ed8']}
+        className={className}
       >
-        <span className="i-ph:upload-simple w-4 h-4" />
         {isLoading ? 'Importing...' : 'Import Folder'}
-      </Button>
+      </GlowButton>
     </>
   );
 };

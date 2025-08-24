@@ -1,7 +1,7 @@
 import type { Message } from 'ai';
 import { toast } from 'react-toastify';
 import { ImportFolderButton } from '~/components/chat/ImportFolderButton';
-import { Button } from '~/components/ui/Button';
+import { GlowButton } from '~/components/ui/GlowButton';
 import { classNames } from '~/utils/classNames';
 
 type ChatData = {
@@ -58,36 +58,22 @@ export function ImportButtons(importChat: ((description: string, messages: Messa
         }}
       />
       <div className="flex flex-col items-center gap-4 max-w-2xl text-center">
-        <div className="flex gap-2">
-          <Button
+        <div className="flex gap-4">
+          <GlowButton
             onClick={() => {
               const input = document.getElementById('chat-import');
               input?.click();
             }}
-            variant="default"
+            variant="primary"
             size="lg"
-            className={classNames(
-              'gap-2 bg-bolt-elements-background-depth-1',
-              'text-bolt-elements-textPrimary',
-              'hover:bg-bolt-elements-background-depth-2',
-              'border border-bolt-elements-borderColor',
-              'h-10 px-4 py-2 min-w-[120px] justify-center',
-              'transition-all duration-200 ease-in-out',
-            )}
+            icon={<span className="i-ph:upload-simple w-4 h-4" />}
+            glowColors={['#10b981', '#059669']}
           >
-            <span className="i-ph:upload-simple w-4 h-4" />
             Import Chat
-          </Button>
+          </GlowButton>
           <ImportFolderButton
             importChat={importChat}
-            className={classNames(
-              'gap-2 bg-bolt-elements-background-depth-1',
-              'text-bolt-elements-textPrimary',
-              'hover:bg-bolt-elements-background-depth-2',
-              'border border-[rgba(0,0,0,0.08)] dark:border-[rgba(255,255,255,0.08)]',
-              'h-10 px-4 py-2 min-w-[120px] justify-center',
-              'transition-all duration-200 ease-in-out rounded-lg',
-            )}
+            className=""
           />
         </div>
       </div>

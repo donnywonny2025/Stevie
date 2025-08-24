@@ -1,4 +1,5 @@
 import { json, type LoaderFunction, type LoaderFunctionArgs } from '@remix-run/cloudflare';
+import { qualityCurator } from '~/lib/quality/QualityCurationManager';
 
 /**
  * Diagnostic API for troubleshooting connection issues
@@ -106,7 +107,48 @@ export const loader: LoaderFunction = async ({ request, context }: LoaderFunctio
     };
   }
 
-  // Provide technical details about the environment
+  // Test Quality Intelligence System
+  let qualitySystemStatus;
+  
+  try {
+    // Initialize quality system if not already done
+    await qualityCurator.initialize();
+    
+    // Get quality system health and performance stats
+    const qualityHealth = qualityCurator.getHealthStatus();
+    const qualityStats = qualityCurator.getPerformanceStats();
+    
+    // Test a quick lookup to verify functionality
+    const testStart = performance.now();
+    const testGuidance = await qualityCurator.getGuidance('button', 'ui');
+    const testTime = performance.now() - testStart;
+    
+    qualitySystemStatus = {
+      isEnabled: true,
+      health: qualityHealth,
+      performance: qualityStats,
+      testLookup: {
+        component: 'button',
+        found: !!testGuidance,
+        lookupTimeMs: Math.round(testTime * 100) / 100,
+        withinTarget: testTime < 50 // <50ms target
+      },
+      capabilities: {
+        qualityGuidance: true,
+        tierSystem: true,
+        libraryRecommendations: true,
+        bestPractices: true
+      }
+    };
+    
+  } catch (error) {
+    qualitySystemStatus = {
+      isEnabled: false,
+      error: error instanceof Error ? error.message : String(error),
+      fallbackMode: 'Scout Intelligence only',
+      impact: 'No quality guidance, base functionality preserved'
+    };
+  }
   const technicalDetails = {
     serverTimestamp: new Date().toISOString(),
     userAgent: request.headers.get('User-Agent'),
@@ -132,6 +174,7 @@ export const loader: LoaderFunction = async ({ request, context }: LoaderFunctio
         github: githubApiStatus,
         netlify: netlifyApiStatus,
       },
+      qualityIntelligence: qualitySystemStatus,
       corsStatus,
       technicalDetails,
     },
