@@ -20,6 +20,7 @@ import { IntelligentContextRetrieval } from '~/lib/intelligence/IntelligentConte
 import { QualityAwareContextManager } from '~/lib/intelligence/QualityAwareContextManager';
 import { TokenManager } from '~/lib/intelligence/TokenManager';
 import { qualityCurator } from '~/lib/quality/QualityCurationManager';
+import { broadcastIntelligenceDebug } from '~/components/chat/IntelligenceDebugConsole';
 
 export async function action(args: ActionFunctionArgs) {
   return chatAction(args);
@@ -28,10 +29,21 @@ export async function action(args: ActionFunctionArgs) {
 const logger = createScopedLogger('api.chat');
 
 // 🚀 Initialize Scout Quality Intelligence System
+console.log('🔍 INITIALIZATION: Creating Intelligence system instances...');
+
 const queryAnalyzer = new QualityAwareQueryAnalyzer();
+console.log('🔍 INITIALIZATION: queryAnalyzer created =', !!queryAnalyzer, typeof queryAnalyzer);
+
 const contextRetrieval = new IntelligentContextRetrieval();
+console.log('🔍 INITIALIZATION: contextRetrieval created =', !!contextRetrieval);
+
 const contextManager = new QualityAwareContextManager();
+console.log('🔍 INITIALIZATION: contextManager created =', !!contextManager);
+
 const tokenManager = new TokenManager();
+console.log('🔍 INITIALIZATION: tokenManager created =', !!tokenManager);
+
+console.log('🔍 INITIALIZATION: All Intelligence systems initialized successfully');
 
 // Initialize quality curation system
 qualityCurator.initialize().catch(error => {
@@ -40,8 +52,47 @@ qualityCurator.initialize().catch(error => {
 
 // Helper function to get cached responses for fallback strategies
 function getCachedResponse(analysis: any, userQuery: string): string | null {
-  if (!analysis.fallback_strategy) return null;
+  // Add debug logging at the start of getCachedResponse function
+  console.log('🎯 GET CACHED RESPONSE:', { 
+    hasAnalysis: !!analysis,
+    hasFallbackStrategy: !!(analysis && analysis.fallback_strategy),
+    strategy: analysis && analysis.fallback_strategy ? analysis.fallback_strategy.strategy : 'none',
+    userQuery 
+  });
   
+  if (!analysis.fallback_strategy) {
+    console.log('❌ NO FALLBACK STRATEGY PROVIDED TO getCachedResponse');
+    return null;
+  }
+  
+  // Check if we have a cached response strategy, then look at the actual pattern
+  if (analysis.fallback_strategy.strategy === 'cached_response') {
+    // For cached_response strategy, we need to determine the actual response based on the query pattern
+    const normalizedQuery = userQuery.toLowerCase().trim();
+    
+    // Greeting patterns
+    if (/^(hi|hello|hey|sup|what's up)[\s\.\!]*$/i.test(normalizedQuery)) {
+      console.log('✅ CACHED RESPONSE: pure_greeting detected');
+      return "Hello! I'm Steve, your intelligent coding assistant. I'm here to help you build amazing things. What would you like to create today? 🚀";
+    }
+    
+    // Gratitude patterns  
+    if (/^(thank you|thanks|thx|ty|appreciate it)[\s\.\!]*$/i.test(normalizedQuery)) {
+      console.log('✅ CACHED RESPONSE: gratitude detected');
+      return "You're very welcome! I'm always happy to help. Feel free to ask me anything else you'd like to work on together! 😊";
+    }
+    
+    // Status check patterns
+    if (/^(how are you|status|are you working|you there)[\s\?\!]*$/i.test(normalizedQuery)) {
+      console.log('✅ CACHED RESPONSE: status_check detected');
+      return "I'm doing great and ready to help! My Scout Intelligence system is running optimally and I'm here to assist you with any coding tasks. What can we build together?";
+    }
+    
+    console.log('❌ CACHED RESPONSE: No pattern matched for cached_response strategy');
+    return null;
+  }
+  
+  // Legacy direct strategy matching (kept for compatibility)
   const strategy = analysis.fallback_strategy.strategy;
   
   switch (strategy) {
@@ -64,6 +115,7 @@ function getCachedResponse(analysis: any, userQuery: string): string | null {
       return "That sounds interesting! To give you the most helpful response, could you provide a bit more context about what you're trying to accomplish? I want to make sure I understand your needs correctly. 🤔";
     
     default:
+      console.log('❌ NO MATCHING STRATEGY:', strategy);
       return null;
   }
 }
@@ -87,6 +139,8 @@ function parseCookies(cookieHeader: string): Record<string, string> {
 }
 
 async function chatAction({ context, request }: ActionFunctionArgs) {
+  console.log('🔍 EXECUTION CHECKPOINT: chatAction function entry');
+  
   const { messages, files, promptId, contextOptimization, supabase, chatMode, designScheme, maxLLMSteps } =
     await request.json<{
       messages: Messages;
@@ -106,6 +160,8 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
       maxLLMSteps: number;
     }>();
 
+  console.log('🔍 EXECUTION CHECKPOINT: Request parsed, message count =', messages.length);
+
   const cookieHeader = request.headers.get('Cookie');
   const apiKeys = JSON.parse(parseCookies(cookieHeader || '').apiKeys || '{}');
   const providerSettings: Record<string, IProviderSetting> = JSON.parse(
@@ -124,9 +180,13 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
   let progressCounter: number = 1;
 
   try {
+    console.log('🔍 EXECUTION CHECKPOINT: Entering try block, preparing dataStream');
+    
     const mcpService = MCPService.getInstance();
     const totalMessageContent = messages.reduce((acc, message) => acc + message.content, '');
     logger.debug(`Total message length: ${totalMessageContent.split(' ').length}, words`);
+    
+    console.log('🔍 EXECUTION CHECKPOINT: About to create dataStream with Intelligence processing');
 
     const dataStream = createDataStream({
       async execute(dataStream) {
@@ -134,13 +194,87 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
         const currentUserMessage = messages[messages.length - 1];
         const sessionId = generateId(); // TODO: Use actual session ID from request
         
+        // 🚨 SIMPLE TEST - This should ALWAYS appear in console
+        console.log('🚨 SIMPLE TEST: API route reached, query =', currentUserMessage.content);
+        
+        // Test if Intelligence classes exist
+        console.log('🧪 Intelligence Test:', {
+          queryAnalyzerExists: !!queryAnalyzer,
+          queryAnalyzerType: typeof queryAnalyzer,
+          hasAnalyzeMethod: !!(queryAnalyzer && queryAnalyzer.analyzeQuery)
+        });
+        
+        // ✅ CORRECT DEBUG PLACEMENT - After currentUserMessage is defined
+        console.log('🚨 API ROUTE DEBUG: Intelligence pipeline starting...');
+        console.log('📍 Message received:', currentUserMessage.content);
+        console.log('📊 Session ID:', sessionId);
+        
         logger.info('🚀 Scout Intelligence: Starting query analysis...');
+        
+        // 🧹 SCOUT TOKEN EFFICIENCY FIX - Strip model metadata before analysis
+        function extractUserQuery(rawQuery: string): string {
+          // Remove model metadata pattern: [Model: ...] [Provider: ...]
+          const cleanQuery = rawQuery.replace(/^\[Model:[^\]]+\]\s*\n*\s*\[Provider:[^\]]+\]\s*\n*\s*/i, '');
+          return cleanQuery.trim();
+        }
+        
+        console.log('🔍 EXECUTION CHECKPOINT: About to call queryAnalyzer.analyzeQuery');
+        console.log('🔍 Intelligence System Check:', {
+          queryAnalyzerExists: !!queryAnalyzer,
+          queryAnalyzerType: typeof queryAnalyzer,
+          hasAnalyzeMethod: !!(queryAnalyzer && queryAnalyzer.analyzeQuery),
+          methodType: typeof (queryAnalyzer && queryAnalyzer.analyzeQuery)
+        });
+        
+        // Extract clean user query (strip model metadata)
+        const userQuery = extractUserQuery(currentUserMessage.content);
+        
+        console.log('🧹 QUERY CLEANING:', {
+          original: currentUserMessage.content,
+          cleaned: userQuery,
+          isContaminated: userQuery !== currentUserMessage.content
+        });
         
         // Step 1: Analyze query using Scout's multi-pass approach
         const analysis = await queryAnalyzer.analyzeQuery(
-          currentUserMessage.content,
+          userQuery,
           messages.slice(0, -1) // Previous conversation context
         );
+        
+        console.log('🔍 EXECUTION CHECKPOINT: queryAnalyzer.analyzeQuery completed successfully');
+        
+        // 🧠 INTELLIGENCE SYSTEM DEBUG LOGGING
+        console.log('📊 QUERY ANALYSIS COMPLETE:', {
+          originalQuery: currentUserMessage.content,
+          cleanedQuery: userQuery,
+          queryType: analysis.query_type,
+          confidenceScore: analysis.confidence_score,
+          hasFallbackStrategy: !!analysis.fallback_strategy,
+          fallbackDetails: analysis.fallback_strategy ? {
+            strategy: analysis.fallback_strategy.strategy,
+            reason: analysis.fallback_strategy.reason,
+            estimatedTokens: analysis.fallback_strategy.estimated_tokens
+          } : null,
+          contextRequirements: {
+            level: analysis.context_requirements.level,
+            estimatedTokens: analysis.context_requirements.estimated_tokens,
+            requiresHistory: analysis.context_requirements.requires_history,
+            requiresFiles: analysis.context_requirements.requires_files
+          }
+        });
+        
+        // 🎯 FALLBACK EXECUTION TRACKING
+        if (analysis.fallback_strategy) {
+          console.log('🎯 ATTEMPTING CACHED RESPONSE:', {
+            strategy: analysis.fallback_strategy.strategy,
+            estimatedTokens: analysis.fallback_strategy.estimated_tokens
+          });
+        } else {
+          console.log('⚠️ NO FALLBACK - PROCEEDING TO FULL CONTEXT:', {
+            contextLevel: analysis.context_requirements.level,
+            estimatedTokens: analysis.context_requirements.estimated_tokens
+          });
+        }
         
         logger.info(`📊 Query classified as: ${analysis.query_type} (confidence: ${analysis.confidence_score.toFixed(2)})`);
         
@@ -168,15 +302,29 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
           });
           
           // Return cached response directly (bypassing entire context building)
-          const cachedResponse = getCachedResponse(analysis, currentUserMessage.content);
+          const cachedResponse = getCachedResponse(analysis, userQuery);
           if (cachedResponse) {
-            // Write cached response to stream - using writeData for text
-            dataStream.writeData({
-              type: 'text',
-              content: cachedResponse
+            console.log('🎯 WRITING CACHED RESPONSE TO STREAM:', cachedResponse);
+            
+            // Write cached response as proper text chunks
+            for (const chunk of cachedResponse.split(' ')) {
+              dataStream.writeData({
+                type: 'text-delta',
+                textDelta: chunk + ' '
+              });
+            }
+            
+            // Write final completion
+            dataStream.writeMessageAnnotation({
+              type: 'usage',
+              value: {
+                completionTokens: analysis.fallback_strategy.estimated_tokens,
+                promptTokens: 0,
+                totalTokens: analysis.fallback_strategy.estimated_tokens,
+              }
             });
             
-            // Write token usage annotation
+            // Write token usage annotation with the ACTUAL efficient usage
             dataStream.writeMessageAnnotation({
               type: 'tokenUsage',
               data: {
@@ -188,7 +336,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
               }
             });
             
-            return;
+            return; // This now properly exits the execute function
           }
         }
         
@@ -207,7 +355,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
         });
         
         const relevantContext = await contextRetrieval.findRelevantContext(
-          currentUserMessage.content,
+          userQuery,
           // Convert AI SDK messages to IntelligentContextRetrieval format
           messages.slice(0, -1).map(msg => ({
             content: msg.content,
@@ -236,7 +384,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
         const contextWindow = await contextManager.buildContextWindow(
           analysis,
           relevantContext,
-          currentUserMessage.content,
+          userQuery,
           sessionId // Use the session ID
         );
         
@@ -423,8 +571,8 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
 
         const options: StreamingOptions = {
           supabaseConnection: supabase,
-          toolChoice: 'auto',
-          tools: mcpService.toolsWithoutExecute,
+          toolChoice: chatMode === 'build' ? 'auto' : 'none',
+          tools: chatMode === 'build' ? mcpService.toolsWithoutExecute : {},
           maxSteps: maxLLMSteps,
           onStepFinish: ({ toolCalls }) => {
             // add tool call annotations for frontend processing
